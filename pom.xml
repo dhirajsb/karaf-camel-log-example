@@ -12,17 +12,13 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <version.compiler.plugin>2.3.1</version.compiler.plugin>
     <version.maven-bundle-plugin>2.3.7</version.maven-bundle-plugin>
-    <maven.compiler.target>1.7</maven.compiler.target>
-    <maven.compiler.source>1.7</maven.compiler.source>
 
     <!-- versions for use in mvn plugins as we cannot inherit them from a BOM -->
-    <fabric8.version>2.2.0.redhat-621030</fabric8.version>
+    <fabric8.version>2.2.0.redhat-621031</fabric8.version>
     <docker.maven.plugin.version>0.13.3</docker.maven.plugin.version>
-    <camel.version>2.15.2</camel.version>
-    <karaf.version>2.4.3</karaf.version>
-    <karaf.plugin.version>4.0.1</karaf.plugin.version>
+    <fuse.version>6.2.1.redhat-040</fuse.version>
+    <karaf.plugin.version>4.0.2.redhat-621031</karaf.plugin.version>
     <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
 
     <docker.from>docker.io/fabric8/sti-karaf:latest</docker.from>
@@ -66,24 +62,10 @@
     <dependency>
       <!-- scope is compile so all features (there is only one) are installed into startup.properties,
       and the feature repo itself is not added in etc/org.apache.karaf.features.cfg file -->
-      <groupId>org.apache.karaf.features</groupId>
-      <artifactId>static</artifactId>
-      <version>${karaf.plugin.version}</version>
+      <groupId>org.jboss.fuse</groupId>
+      <artifactId>fuse-karaf-framework</artifactId>
+      <version>${fuse.version}</version>
       <type>kar</type>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.karaf.assemblies.features</groupId>
-      <artifactId>standard</artifactId>
-      <version>${karaf.version}</version>
-      <classifier>features</classifier>
-      <type>xml</type>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.camel.karaf</groupId>
-      <artifactId>apache-camel</artifactId>
-      <version>${camel.version}</version>
-      <classifier>features</classifier>
-      <type>xml</type>
     </dependency>
   </dependencies>
 
@@ -99,10 +81,10 @@
       <!-- Compiler plugin enforces Java 1.7 compatibility and activates annotation processors -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${version.compiler.plugin}</version>
+        <version>2.3.1</version>
         <configuration>
-          <source>${maven.compiler.source}</source>
-          <target>${maven.compiler.target}</target>
+          <source>1.7</source>
+          <target>1.7</target>
         </configuration>
       </plugin>
       <plugin>
@@ -193,44 +175,23 @@
           </execution>
         </executions>
         <configuration>
+          <!-- we are using karaf 2.4.x -->
+          <karafVersion>v24</karafVersion>
+          <useReferenceUrls>true</useReferenceUrls>
           <!-- do not include build output directory -->
           <includeBuildOutputDirectory>false</includeBuildOutputDirectory>
           <!-- no startupFeatures -->
           <startupFeatures>
-<!--
-            <feature>wrap</feature>
-            <feature>shell</feature>
-            <feature>shell-compat</feature>
-            <feature>feature</feature>
-            <feature>ssh</feature>
-            <feature>bundle</feature>
-            <feature>config</feature>
-            <feature>deployer</feature>
-            <feature>diagnostic</feature>
-            <feature>feature</feature>
-            <feature>instance</feature>
-            <feature>kar</feature>
-            <feature>package</feature>
-            <feature>service</feature>
--->
             <feature>karaf-framework</feature>
             <feature>jaas</feature>
-            <feature>management</feature>
             <feature>aries-blueprint</feature>
-<!-- commented because it pulls in bundles like camel-commands, which should be optional
-            <feature>camel-core</feature>
             <feature>camel-blueprint</feature>
--->
+            <!-- TODO remove after camel-commands are made optional under camel-core -->
+            <feature>shell</feature>
           </startupFeatures>
           <startupBundles>
-            <bundle>mvn:org.apache.camel/camel-core/${camel.version}</bundle>
-            <bundle>mvn:org.apache.camel/camel-catalog/${camel.version}</bundle>
-            <bundle>mvn:org.apache.camel/camel-blueprint/${camel.version}</bundle>
             <bundle>mvn:${project.groupId}/${project.artifactId}/${project.version}</bundle>
           </startupBundles>
-          <libraries>
-            <library>mvn:org.apache.karaf.jaas/org.apache.karaf.jaas.boot/${karaf.version};type:=boot;export:=true;delegate:=true</library>
-          </libraries>
         </configuration>
       </plugin>
 
@@ -319,7 +280,7 @@
     <profile>
       <id>fabric8-snapshot</id>
       <properties>
-        <fabric8.version>2.2.0.redhat-621030</fabric8.version>
+        <fabric8.version>2.2.0.redhat-621031</fabric8.version>
       </properties>
     </profile>
   </profiles>
