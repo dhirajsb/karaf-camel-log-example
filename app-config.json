@@ -1,0 +1,208 @@
+{
+    "kind": "List",
+    "apiVersion": "v1",
+    "metadata": {},
+    "items": [
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "sti-karaf",
+                "creationTimestamp": null,
+                "labels": {
+                    "component": "karaf-camel-log-example",
+                    "container": "karaf",
+                    "group": "quickstarts"
+                }
+            },
+            "spec": {
+                "dockerImageRepository": "docker.io/fabric8/sti-karaf"
+            },
+            "status": {
+                "dockerImageRepository": ""
+            }
+        },
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "karaf-camel-log-example",
+                "creationTimestamp": null,
+                "labels": {
+                    "component": "karaf-camel-log-example",
+                    "container": "karaf",
+                    "group": "quickstarts"
+                }
+            },
+            "spec": {},
+            "status": {
+                "dockerImageRepository": ""
+            }
+        },
+        {
+            "kind": "BuildConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "karaf-camel-log-example",
+                "creationTimestamp": null,
+                "labels": {
+                    "component": "karaf-camel-log-example",
+                    "container": "karaf",
+                    "group": "quickstarts"
+                }
+            },
+            "spec": {
+                "triggers": [
+                    {
+                        "type": "GitHub",
+                        "github": {
+                            "secret": "vaDtlXExIfEDVfl0HZTw"
+                        }
+                    },
+                    {
+                        "type": "Generic",
+                        "generic": {
+                            "secret": "BF2cbZhhp6yhwpk76iNi"
+                        }
+                    },
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "type": "ImageChange",
+                        "imageChange": {}
+                    }
+                ],
+                "source": {
+                    "type": "Git",
+                    "git": {
+                        "uri": "https://github.com/dhirajsb/karaf-camel-log-example",
+                        "ref": "2.2.0.redhat-621031"
+                    }
+                },
+                "strategy": {
+                    "type": "Source",
+                    "sourceStrategy": {
+                        "from": {
+                            "kind": "ImageStreamTag",
+                            "name": "sti-karaf:latest"
+                        }
+                    }
+                },
+                "output": {
+                    "to": {
+                        "kind": "ImageStreamTag",
+                        "name": "karaf-camel-log-example:latest"
+                    }
+                },
+                "resources": {}
+            },
+            "status": {
+                "lastVersion": 0
+            }
+        },
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "karaf-camel-log-example",
+                "creationTimestamp": null,
+                "labels": {
+                    "component": "karaf-camel-log-example",
+                    "container": "karaf",
+                    "group": "quickstarts"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "resources": {}
+                },
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "type": "ImageChange",
+                        "imageChangeParams": {
+                            "automatic": true,
+                            "containerNames": [
+                                "karaf-camel-log-example"
+                            ],
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "karaf-camel-log-example:latest"
+                            }
+                        }
+                    }
+                ],
+                "replicas": 1,
+                "selector": {
+                    "component": "karaf-camel-log-example",
+                    "container": "karaf",
+                    "deploymentconfig": "karaf-camel-log-example",
+                    "group": "quickstarts"
+                },
+                "template": {
+                    "metadata": {
+                        "creationTimestamp": null,
+                        "labels": {
+                            "component": "karaf-camel-log-example",
+                            "container": "karaf",
+                            "deploymentconfig": "karaf-camel-log-example",
+                            "group": "quickstarts"
+                        }
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "name": "karaf-camel-log-example",
+                                "image": "library/karaf-camel-log-example:latest",
+                                "ports": [
+                                    {
+                                        "containerPort": 8778,
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "resources": {}
+                            }
+                        ]
+                    }
+                }
+            },
+            "status": {}
+        },
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "karaf-camel-log-example",
+                "creationTimestamp": null,
+                "labels": {
+                    "component": "karaf-camel-log-example",
+                    "container": "karaf",
+                    "group": "quickstarts"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "8778-tcp",
+                        "protocol": "TCP",
+                        "port": 8778,
+                        "targetPort": 8778,
+                        "nodePort": 0
+                    }
+                ],
+                "selector": {
+                    "component": "karaf-camel-log-example",
+                    "container": "karaf",
+                    "deploymentconfig": "karaf-camel-log-example",
+                    "group": "quickstarts"
+                }
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        }
+    ]
+}
