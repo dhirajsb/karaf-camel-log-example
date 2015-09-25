@@ -1,1 +1,1 @@
-MAVEN_ARGS="-e install -DskipTests -Dorg.ops4j.pax.url.mvn.repositories=http://repo1.maven.org/maven2@id=maven.central.repo,http://origin-repository.jboss.org/nexus/content/groups/ea@id=jboss.ea"
+MAVEN_ARGS=-e install -DskipTests -Dorg.ops4j.pax.url.mvn.repositories=http://repo1.maven.org/maven2@id=maven.central.repo,http://origin-repository.jboss.org/nexus/content/groups/ea@id=jboss.ea

@@ -193,10 +193,9 @@
             "spec": {
                 "ports": [
                     {
-                        "name": "8778-tcp",
+                        "name": "jolokia",
                         "protocol": "TCP",
                         "port": 8778,
-                        "targetPort": 8778,
                         "nodePort": 0
                     }
                 ],
