@@ -87,7 +87,14 @@
                             "kind": "ImageStreamTag",
                             "name": "sti-karaf:latest"
                         }
-                    }
+                    },
+                    "env": [
+		      {
+		        "name": "MAVEN_ARGS",
+		        "value": "-e -DskipTests install -Dorg.ops4j.pax.url.mvn.repositories=http://repo1.maven.org/maven2@id=maven.central.repo,http://origin-repository.jboss.org/nexus/content/groups/ea@id=jboss.ea"
+		      }
+		    ],
+                    "incremental": true
                 },
                 "output": {
                     "to": {
