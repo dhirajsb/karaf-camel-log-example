@@ -1,7 +1,37 @@
-# Camel Log QuickStart
+# Karaf Camel Log QuickStart
 
 This quickstart shows a simple Apache Camel application that logs a message to the server log every 5th second.
 
 This example is implemented using solely the XML DSL (there is no Java code). The source code is provided in the following XML file `src/main/resources/OSGI-INF/blueprint/camel-log.xml`.
 
-This example uses a timer to trigger every 5th second, and then writes a message to the server log.
+
+
+The example can be built with
+
+    mvn clean install
+
+
+
+It is assumed a running Kubernetes platform is already running. If not you can find details how to [get started](http://fabric8.io/guide/getStarted/index.html).
+
+The example can be built and deployed using a single goal:
+
+    mvn -Pf8-local-deploy
+
+When the example runs in fabric8, you can use the OpenShift client tool to inspect the status
+
+To list all the running pods:
+
+    oc get pods
+
+Then find the name of the pod that runs this quickstart, and output the logs from the running pods with:
+
+    oc logs <name of pod>
+
+You can also use the fabric8 [web console](http://fabric8.io/guide/console.html) to manage the
+running pods, and view logs and much more.
+
+
+
+You can find more details about running this [quickstart](http://fabric8.io/guide/quickstarts/running.html) on the website. This also includes instructions how to change the Docker image user and registry.
+

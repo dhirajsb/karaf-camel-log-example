@@ -8,28 +8,31 @@
   <version>1.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <name>Fabric8 :: Quickstarts :: Karaf :: Camel Log</name>
-  <description>Camel Log Example</description>
+  <description>A simple Camel route in Karaf container</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.maven-bundle-plugin>2.3.7</version.maven-bundle-plugin>
 
     <!-- versions for use in mvn plugins as we cannot inherit them from a BOM -->
-    <fabric8.version>2.2.0.redhat-621031</fabric8.version>
-    <docker.maven.plugin.version>0.13.3</docker.maven.plugin.version>
-    <fuse.version>6.2.1.redhat-040</fuse.version>
-    <karaf.plugin.version>4.0.2.redhat-621031</karaf.plugin.version>
-    <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
+    <fabric8.version>2.2.0.redhat-052</fabric8.version>
+    <docker.maven.plugin.version>0.13.6</docker.maven.plugin.version>
 
-    <docker.from>docker.io/fabric8/sti-karaf:latest</docker.from>
 
-    <fabric8.dockerPrefix>docker.io/</fabric8.dockerPrefix>
+
+    <camel.version>2.15.1.redhat-621070</camel.version>
+    <fuse.version>6.2.1.redhat-070</fuse.version>
+    <karaf.version>2.4.0.redhat-621070</karaf.version>
+    <karaf.plugin.version>4.0.2.redhat-621052</karaf.plugin.version>
+
+    <docker.from>fabric8/s2i-karaf-rhel:1.1.5</docker.from>
     <fabric8.dockerUser>fabric8/</fabric8.dockerUser>
-    <docker.image>${fabric8.dockerPrefix}${fabric8.dockerUser}quickstart-karaf-camellog:${project.version}</docker.image>
+    <docker.image>${fabric8.dockerUser}quickstart-karaf-camellog:${project.version}</docker.image>
     <docker.assemblyDescriptor>${basedir}/src/main/fabric8/assembly.xml</docker.assemblyDescriptor>
     <docker.port.container.jolokia>8778</docker.port.container.jolokia>
     <docker.port.container.http>8181</docker.port.container.http>
 
+    <fabric8.env.AB_JOLOKIA_AUTH_OPENSHIFT>true</fabric8.env.AB_JOLOKIA_AUTH_OPENSHIFT>
     <fabric8.label.component>${project.artifactId}</fabric8.label.component>
     <fabric8.label.container>karaf</fabric8.label.container>
     <fabric8.label.group>quickstarts</fabric8.label.group>
@@ -49,13 +52,14 @@
   </dependencyManagement>
 
   <dependencies>
-    <!--
-     For this example, we will be using the OSGi Blueprint XML syntax for Apache Camel.
-    -->
+
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-blueprint</artifactId>
-      <scope>runtime</scope>
     </dependency>
 
     <!-- Karaf microcontainer dependencies -->
@@ -77,36 +81,16 @@
         <filtering>true</filtering>
       </resource>
     </resources>
+
     <plugins>
       <!-- Compiler plugin enforces Java 1.7 compatibility and activates annotation processors -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.1</version>
+        <version>3.3</version>
         <configuration>
           <source>1.7</source>
           <target>1.7</target>
         </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>filter-extra-resources</id>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <phase>process-resources</phase>
-            <configuration>
-              <outputDirectory>${project.build.directory}/fabric8</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>src/main/fabric8</directory>
-                  <filtering>true</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -140,7 +124,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-install-plugin</artifactId>
-        <version>${maven-install-plugin.version}</version>
+        <version>2.5.2</version>
         <executions>
           <execution>
             <id>install-bundle</id>
@@ -183,11 +167,10 @@
           <!-- no startupFeatures -->
           <startupFeatures>
             <feature>karaf-framework</feature>
+            <feature>shell</feature>
             <feature>jaas</feature>
             <feature>aries-blueprint</feature>
             <feature>camel-blueprint</feature>
-            <!-- TODO remove after camel-commands are made optional under camel-core -->
-            <feature>shell</feature>
           </startupFeatures>
           <startupBundles>
             <bundle>mvn:${project.groupId}/${project.artifactId}/${project.version}</bundle>
@@ -224,8 +207,8 @@
                   </inline>
                 </assembly>
                 <cmd>
-<shell>/opt/karaf/bin/deploy-and-run.sh</shell>
-</cmd>
+                  <shell>/opt/karaf/bin/deploy-and-run.sh</shell>
+                </cmd>
               </build>
             </image>
           </images>
@@ -234,54 +217,40 @@
     </plugins>
   </build>
 
+    <!--
+  Default sample commands:
+
+  mvn -Pf8-build         ... build Docker images and create OpenShift deployment configs
+  mvn -Pf8-deploy        ... f8-build + push to Docker registry + applying deployment config to OpenShift
+  mvn -Pf8-local-deploy ... deployment for a single node setup without pushing to a registry
+
+  For individual goal usage please consult the fabric8 documentation
+  -->
   <profiles>
     <profile>
-      <id>docker-build</id>
+      <id>f8-build</id>
       <build>
-        <plugins>
-          <plugin>
-            <groupId>org.jolokia</groupId>
-            <artifactId>docker-maven-plugin</artifactId>
-            <version>${docker.maven.plugin.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>build</goal>
-                </goals>
-                <phase>package</phase>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
+        <defaultGoal>clean install docker:build fabric8:json</defaultGoal>
       </build>
     </profile>
     <profile>
-      <id>docker-push</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.jolokia</groupId>
-            <artifactId>docker-maven-plugin</artifactId>
-            <version>${docker.maven.plugin.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>build</goal>
-                  <goal>push</goal>
-                </goals>
-                <phase>package</phase>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>fabric8-snapshot</id>
+      <id>f8-deploy</id>
       <properties>
-        <fabric8.version>2.2.0.redhat-621031</fabric8.version>
+        <fabric8.imagePullPolicySnapshot>Always</fabric8.imagePullPolicySnapshot>
+        <fabric8.recreate>true</fabric8.recreate>
       </properties>
+      <build>
+        <defaultGoal>clean install docker:build docker:push fabric8:json fabric8:apply</defaultGoal>
+      </build>
+    </profile>
+    <profile>
+      <id>f8-local-deploy</id>
+      <properties>
+        <fabric8.recreate>true</fabric8.recreate>
+      </properties>
+      <build>
+        <defaultGoal>clean install docker:build fabric8:json fabric8:apply</defaultGoal>
+      </build>
     </profile>
   </profiles>
 
