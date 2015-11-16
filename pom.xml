@@ -3,37 +3,36 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.jboss.openshift.fuse.example</groupId>
+  <groupId>org.jboss.examples</groupId>
   <artifactId>karaf-camel-log-example</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <name>Fabric8 :: Quickstarts :: Karaf :: Camel Log</name>
-  <description>Camel Log Example</description>
+  <description>A simple Camel route in Karaf container</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <version.compiler.plugin>2.3.1</version.compiler.plugin>
     <version.maven-bundle-plugin>2.3.7</version.maven-bundle-plugin>
-    <maven.compiler.target>1.7</maven.compiler.target>
-    <maven.compiler.source>1.7</maven.compiler.source>
 
     <!-- versions for use in mvn plugins as we cannot inherit them from a BOM -->
-    <fabric8.version>2.2.0.redhat-621030</fabric8.version>
-    <docker.maven.plugin.version>0.13.3</docker.maven.plugin.version>
-    <camel.version>2.15.2</camel.version>
-    <karaf.version>2.4.3</karaf.version>
-    <karaf.plugin.version>4.0.1</karaf.plugin.version>
-    <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
+    <fabric8.version>2.2.0.redhat-061</fabric8.version>
+    <docker.maven.plugin.version>0.13.6</docker.maven.plugin.version>
 
-    <docker.from>docker.io/fabric8/sti-karaf:latest</docker.from>
 
-    <fabric8.dockerPrefix>docker.io/</fabric8.dockerPrefix>
+
+    <camel.version>2.15.1.redhat-621072</camel.version>
+    <fuse.version>6.2.1.redhat-072</fuse.version>
+    <karaf.version>2.4.0.redhat-621072</karaf.version>
+    <karaf.plugin.version>4.0.2.redhat-621061</karaf.plugin.version>
+
+    <docker.from>fabric8/s2i-karaf-rhel:1.2.1</docker.from>
     <fabric8.dockerUser>fabric8/</fabric8.dockerUser>
-    <docker.image>${fabric8.dockerPrefix}${fabric8.dockerUser}quickstart-karaf-camellog:${project.version}</docker.image>
+    <docker.image>${fabric8.dockerUser}quickstart-karaf-camellog:${project.version}</docker.image>
     <docker.assemblyDescriptor>${basedir}/src/main/fabric8/assembly.xml</docker.assemblyDescriptor>
     <docker.port.container.jolokia>8778</docker.port.container.jolokia>
     <docker.port.container.http>8181</docker.port.container.http>
 
+    <!-- fabric8.env.AB_JOLOKIA_AUTH_OPENSHIFT>true</fabric8.env.AB_JOLOKIA_AUTH_OPENSHIFT -->
     <fabric8.label.component>${project.artifactId}</fabric8.label.component>
     <fabric8.label.container>karaf</fabric8.label.container>
     <fabric8.label.group>quickstarts</fabric8.label.group>
@@ -53,37 +52,24 @@
   </dependencyManagement>
 
   <dependencies>
-    <!--
-     For this example, we will be using the OSGi Blueprint XML syntax for Apache Camel.
-    -->
+
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-blueprint</artifactId>
-      <scope>runtime</scope>
     </dependency>
 
     <!-- Karaf microcontainer dependencies -->
     <dependency>
       <!-- scope is compile so all features (there is only one) are installed into startup.properties,
       and the feature repo itself is not added in etc/org.apache.karaf.features.cfg file -->
-      <groupId>org.apache.karaf.features</groupId>
-      <artifactId>static</artifactId>
-      <version>${karaf.plugin.version}</version>
+      <groupId>org.jboss.fuse</groupId>
+      <artifactId>fuse-karaf-framework</artifactId>
+      <version>${fuse.version}</version>
       <type>kar</type>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.karaf.assemblies.features</groupId>
-      <artifactId>standard</artifactId>
-      <version>${karaf.version}</version>
-      <classifier>features</classifier>
-      <type>xml</type>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.camel.karaf</groupId>
-      <artifactId>apache-camel</artifactId>
-      <version>${camel.version}</version>
-      <classifier>features</classifier>
-      <type>xml</type>
     </dependency>
   </dependencies>
 
@@ -95,36 +81,16 @@
         <filtering>true</filtering>
       </resource>
     </resources>
+
     <plugins>
       <!-- Compiler plugin enforces Java 1.7 compatibility and activates annotation processors -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${version.compiler.plugin}</version>
+        <version>3.3</version>
         <configuration>
-          <source>${maven.compiler.source}</source>
-          <target>${maven.compiler.target}</target>
+          <source>1.7</source>
+          <target>1.7</target>
         </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>filter-extra-resources</id>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <phase>process-resources</phase>
-            <configuration>
-              <outputDirectory>${project.build.directory}/fabric8</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>src/main/fabric8</directory>
-                  <filtering>true</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -158,7 +124,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-install-plugin</artifactId>
-        <version>${maven-install-plugin.version}</version>
+        <version>2.5.2</version>
         <executions>
           <execution>
             <id>install-bundle</id>
@@ -193,44 +159,22 @@
           </execution>
         </executions>
         <configuration>
+          <!-- we are using karaf 2.4.x -->
+          <karafVersion>v24</karafVersion>
+          <useReferenceUrls>true</useReferenceUrls>
           <!-- do not include build output directory -->
           <includeBuildOutputDirectory>false</includeBuildOutputDirectory>
           <!-- no startupFeatures -->
           <startupFeatures>
-<!--
-            <feature>wrap</feature>
-            <feature>shell</feature>
-            <feature>shell-compat</feature>
-            <feature>feature</feature>
-            <feature>ssh</feature>
-            <feature>bundle</feature>
-            <feature>config</feature>
-            <feature>deployer</feature>
-            <feature>diagnostic</feature>
-            <feature>feature</feature>
-            <feature>instance</feature>
-            <feature>kar</feature>
-            <feature>package</feature>
-            <feature>service</feature>
--->
             <feature>karaf-framework</feature>
+            <feature>shell</feature>
             <feature>jaas</feature>
-            <feature>management</feature>
             <feature>aries-blueprint</feature>
-<!-- commented because it pulls in bundles like camel-commands, which should be optional
-            <feature>camel-core</feature>
             <feature>camel-blueprint</feature>
--->
           </startupFeatures>
           <startupBundles>
-            <bundle>mvn:org.apache.camel/camel-core/${camel.version}</bundle>
-            <bundle>mvn:org.apache.camel/camel-catalog/${camel.version}</bundle>
-            <bundle>mvn:org.apache.camel/camel-blueprint/${camel.version}</bundle>
             <bundle>mvn:${project.groupId}/${project.artifactId}/${project.version}</bundle>
           </startupBundles>
-          <libraries>
-            <library>mvn:org.apache.karaf.jaas/org.apache.karaf.jaas.boot/${karaf.version};type:=boot;export:=true;delegate:=true</library>
-          </libraries>
         </configuration>
       </plugin>
 
@@ -245,11 +189,8 @@
               <name>${docker.image}</name>
               <build>
                 <from>${docker.from}</from>
-                <env>
-                  <DEPLOY_DIR>/opt/jboss/deploy</DEPLOY_DIR>
-                </env>
                 <assembly>
-                  <basedir>/opt/jboss/deploy/</basedir>
+                  <basedir>/deployments</basedir>
                   <user>jboss:jboss:jboss</user>
                   <inline xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2" xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
                     <id>${project.artifactId}</id>
@@ -263,8 +204,8 @@
                   </inline>
                 </assembly>
                 <cmd>
-<shell>/opt/karaf/bin/deploy-and-run.sh</shell>
-</cmd>
+                  <shell>/deployments/deploy-and-run.sh</shell>
+                </cmd>
               </build>
             </image>
           </images>
@@ -273,82 +214,41 @@
     </plugins>
   </build>
 
+    <!--
+  Default sample commands:
+
+  mvn -Pf8-build         ... build Docker images and create OpenShift deployment configs
+  mvn -Pf8-deploy        ... f8-build + push to Docker registry + applying deployment config to OpenShift
+  mvn -Pf8-local-deploy ... deployment for a single node setup without pushing to a registry
+
+  For individual goal usage please consult the fabric8 documentation
+  -->
   <profiles>
     <profile>
-      <id>docker-build</id>
+      <id>f8-build</id>
       <build>
-        <plugins>
-          <plugin>
-            <groupId>org.jolokia</groupId>
-            <artifactId>docker-maven-plugin</artifactId>
-            <version>${docker.maven.plugin.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>build</goal>
-                </goals>
-                <phase>package</phase>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
+        <defaultGoal>clean install docker:build fabric8:json</defaultGoal>
       </build>
     </profile>
     <profile>
-      <id>docker-push</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.jolokia</groupId>
-            <artifactId>docker-maven-plugin</artifactId>
-            <version>${docker.maven.plugin.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>build</goal>
-                  <goal>push</goal>
-                </goals>
-                <phase>package</phase>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>fabric8-snapshot</id>
+      <id>f8-deploy</id>
       <properties>
-        <fabric8.version>2.2.0.redhat-621030</fabric8.version>
+        <fabric8.imagePullPolicySnapshot>Always</fabric8.imagePullPolicySnapshot>
+        <fabric8.recreate>true</fabric8.recreate>
       </properties>
+      <build>
+        <defaultGoal>clean install docker:build docker:push fabric8:json fabric8:apply</defaultGoal>
+      </build>
+    </profile>
+    <profile>
+      <id>f8-local-deploy</id>
+      <properties>
+        <fabric8.recreate>true</fabric8.recreate>
+      </properties>
+      <build>
+        <defaultGoal>clean install docker:build fabric8:json fabric8:apply</defaultGoal>
+      </build>
     </profile>
   </profiles>
-
-  <repositories>
-    <repository>
-      <releases>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>jboss.ea</id>
-      <name>JBoss Community Early Access Release Repository</name>
-      <url>http://origin-repository.jboss.org/nexus/content/groups/ea</url>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <releases>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>jboss.ea</id>
-      <name>JBoss Community Early Access Release Repository</name>
-      <url>http://origin-repository.jboss.org/nexus/content/groups/ea</url>
-    </pluginRepository>
-  </pluginRepositories>
 
 </project>
